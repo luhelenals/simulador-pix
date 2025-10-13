@@ -52,7 +52,7 @@ public class UsuarioController {
 
         String token = SessaoManager.criarSessao(cpf);
 
-        return criarResposta(dados.get("operacao").asText(), false, "Login bem-sucedido.", "token", token);
+        return criarResposta(dados.get("operacao").asText(), true, "Login bem-sucedido.", "token", token);
     }
 
     /**

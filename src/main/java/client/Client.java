@@ -118,12 +118,14 @@ public class Client {
         request.put("senha", senha);
 
         String responseJson = connection.sendRequest(request.toString());
+        System.out.println("Resposta do servidor: " + responseJson);
         if (responseJson != null) {
             try {
                 JsonNode response = objectMapper.readTree(responseJson);
                 System.out.println("Servidor: " + response.get("info").asText());
                 if (response.get("status").asBoolean()) {
                     this.token = response.get("token").asText(); // Armazena o token
+                    System.out.println("Token recebido do servidor: " + token);
                 }
             } catch (JsonProcessingException e) {
                 System.err.println("Erro ao processar resposta do servidor.");
