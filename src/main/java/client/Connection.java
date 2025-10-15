@@ -1,5 +1,7 @@
 package client;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,6 +33,9 @@ public class Connection {
             this.socket = new Socket(host, port);
             this.writer = new PrintWriter(socket.getOutputStream(), true);
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            Thread.startVirtualThread(() -> sendRequest("{\"operacao\": \"conectar\"}"));
+
             System.out.println("Conectado ao servidor em " + host + ":" + port);
             return true;
         } catch (UnknownHostException e) {
@@ -48,6 +53,7 @@ public class Connection {
      * @return A string JSON da resposta do servidor, ou null em caso de erro.
      */
     public String sendRequest(String jsonRequest) {
+        System.out.println("[CONNECTION] Enviando para servidor");
         try {
             writer.println(jsonRequest);
             return reader.readLine();

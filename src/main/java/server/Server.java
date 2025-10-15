@@ -8,7 +8,7 @@ import server.repository.Database; // Importa a classe do banco de dados
 public class Server {
 
     // Define a porta como uma constante para fácil alteração
-    private static final int PORTA = 9000;
+    private static final int PORTA = 15151;
 
     public static void main(String[] args) {
         // 1. Inicializa o banco de dados antes de tudo

@@ -7,6 +7,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import com.fasterxml.jackson.databind.JsonNode;
 import common.validator.RulesEnum;
+
+import static common.util.RespostaManager.criarResposta;
 import static common.validator.Validator.validateClient;
 import server.controllers.UsuarioController;
 import server.controllers.TransacaoController;
@@ -65,6 +67,9 @@ public class ClientHandler implements Runnable {
             String response;
 
             switch(operacao) {
+                case CONECTAR:
+                    response = criarResposta(json.get("operacao").asText(), true, "Conectado com sucesso.");
+                    break;
                 case USUARIO_LOGIN:
                     response = UsuarioController.login(json);
                     break;
@@ -87,10 +92,10 @@ public class ClientHandler implements Runnable {
                     response = TransacaoController.criarTransacao(json);
                     break;
                 case TRANSACAO_LER:
-                    response = "Método ainda não implementado";
+                    response = TransacaoController.getTransacoes(json);
                     break;
                 case DEPOSITAR:
-                    response = "Método ainda não implementado";
+                    response = UsuarioController.depositar(json);
                     break;
                 default:
                     throw new IllegalArgumentException("Operação do cliente desconhecida ou não suportada: " + operacao);

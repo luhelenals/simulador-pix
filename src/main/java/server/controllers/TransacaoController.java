@@ -2,22 +2,53 @@ package server.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.models.Transacao;
 import common.models.Usuario;
 import server.repository.TransacaoRepository;
 import server.repository.UsuarioRepository;
 import common.util.SessaoManager;
-
+import java.util.List;
 import java.util.Optional;
-
 import static common.util.RespostaManager.criarResposta;
 
 public class TransacaoController {
 
     private static final UsuarioRepository usuarioRepository = new UsuarioRepository();
     private static final TransacaoRepository transacaoRepository = new TransacaoRepository();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public TransacaoController() {}
+
+    /**
+     * Obtem transações de um usuário
+     */
+    public static String getTransacoes(JsonNode dados) {
+        String token = dados.get("token").asText();
+        String cpf = SessaoManager.getCpfPeloToken(token);
+
+        if (cpf == null) {
+            return criarResposta(dados.get("operacao").asText(), false, "Token inválido ou sessão expirada.");
+        }
+
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByCpf(cpf);
+        if (usuarioOpt.isEmpty()) {
+            return criarResposta(dados.get("operacao").asText(), false, "Usuário não encontrado.");
+        }
+
+        List<Transacao> transacoesEncontradas = transacaoRepository.findByCpf(cpf);
+
+        ArrayNode transacoesArrayNode = objectMapper.valueToTree(transacoesEncontradas);
+        ObjectNode resposta = objectMapper.createObjectNode();
+
+        resposta.put("operacao", dados.get("operacao").asText());
+        resposta.put("status", true);
+        resposta.put("info", "Dados do usuário recuperados com sucesso.");
+        resposta.set("transacoes", transacoesArrayNode);
+
+        return resposta.toString();
+    }
 
     /**
      * Processa a criação de uma nova transação (PIX).
@@ -67,8 +98,5 @@ public class TransacaoController {
 
         return criarResposta(dados.get("operacao").asText(), true, "Transação realizada com sucesso.");
     }
-
-    // NOTA: O método para LER transações (extrato) seria implementado aqui.
-    // Ele receberia as datas, buscaria no transacaoRepository e retornaria uma lista.
 
 }

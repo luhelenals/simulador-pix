@@ -23,14 +23,13 @@ public class UsuarioController {
         String nome = dados.get("nome").asText();
         String cpf = dados.get("cpf").asText();
         String senha = dados.get("senha").asText();
-        double saldo = dados.get("saldo").asDouble();
 
         // Verifica se o usuário já existe
         if (usuarioRepository.findByCpf(cpf).isPresent()) {
             return criarResposta(dados.get("operacao").asText(), false, "CPF já cadastrado.");
         }
 
-        Usuario novoUsuario = new Usuario(nome, cpf, senha, saldo);
+        Usuario novoUsuario = new Usuario(nome, cpf, senha, 0); // Inicializa usuário novo com saldo 0
         System.out.println("[CONTROLLER] Tentando criar usuário com CPF: " + novoUsuario.getCpf());
         usuarioRepository.save(novoUsuario);
 
@@ -98,7 +97,7 @@ public class UsuarioController {
     /**
      * Processa a operação de depósito na conta do usuário.
      */
-    public String depositar(JsonNode dados) {
+    public static String depositar(JsonNode dados) {
         String token = dados.get("token").asText();
         double valor = dados.get("valor_enviado").asDouble();
         String cpf = SessaoManager.getCpfPeloToken(token);

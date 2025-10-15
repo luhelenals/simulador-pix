@@ -93,15 +93,12 @@ public class Client {
         String cpf = scanner.nextLine();
         System.out.print("Senha (mínimo 6 caracteres): ");
         String senha = scanner.nextLine();
-        System.out.print("Saldo inicial: ");
-        double saldo = scanner.nextDouble();
 
         ObjectNode request = objectMapper.createObjectNode();
         request.put("operacao", "usuario_criar");
         request.put("nome", nome);
         request.put("cpf", cpf);
         request.put("senha", senha);
-        request.put("saldo", saldo);
 
         processarResposta(request.toString());
     }
@@ -197,6 +194,7 @@ public class Client {
      * Método genérico para enviar uma requisição e imprimir a resposta do servidor.
      */
     private void processarResposta(String requestJson) {
+        System.out.println("Enviando requisição para o servidor: " + requestJson);
         String responseJson = connection.sendRequest(requestJson);
         if (responseJson != null) {
             try {
@@ -213,12 +211,12 @@ public class Client {
         String host = "localhost";
         int port = 9000;
 
-        /*
-        * System.out.println("IP do servidor: ");
-        * String host = scanner.nextLine();
-        * System.out.println("Porta do servidor: ");
-        * int port = scanner.nextInt();
-        * */
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("IP do servidor: ");
+        host = scanner.nextLine();
+        System.out.println("Porta do servidor: ");
+        port = scanner.nextInt();
 
         Client client = new Client(host, port);
         client.start();
