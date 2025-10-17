@@ -20,21 +20,26 @@ public class UsuarioController {
      * Processa a criação de um novo usuário.
      */
     public static String criarUsuario(JsonNode dados) {
-        String nome = dados.get("nome").asText();
-        String cpf = dados.get("cpf").asText();
-        String senha = dados.get("senha").asText();
-        double saldo = dados.get("saldo").asDouble();
+        try {
+            String nome = dados.get("nome").asText();
+            String cpf = dados.get("cpf").asText();
+            String senha = dados.get("senha").asText();
 
-        // Verifica se o usuário já existe
-        if (usuarioRepository.findByCpf(cpf).isPresent()) {
-            return criarResposta(dados.get("operacao").asText(), false, "CPF já cadastrado.");
+            // Verifica se o usuário já existe
+            if (usuarioRepository.findByCpf(cpf).isPresent()) {
+                return criarResposta(dados.get("operacao").asText(), false, "CPF já cadastrado.");
+            }
+
+            Usuario novoUsuario = new Usuario(nome, cpf, senha, 0); // Inicializa usuário novo com saldo 0
+            System.out.println("[CONTROLLER] Tentando criar usuário com CPF: " + novoUsuario.getCpf());
+
+            usuarioRepository.save(novoUsuario);
+
+            return criarResposta(dados.get("operacao").asText(), true, "Usuário criado com sucesso.");
         }
-
-        Usuario novoUsuario = new Usuario(nome, cpf, senha, saldo);
-        System.out.println("[CONTROLLER] Tentando criar usuário com CPF: " + novoUsuario.getCpf());
-        usuarioRepository.save(novoUsuario);
-
-        return criarResposta(dados.get("operacao").asText(), true, "Usuário criado com sucesso.");
+        catch (Exception e) {
+            return criarResposta(dados.get("operacao").asText(), false, "Erro ao cadastrar o usuário.");
+        }
     }
 
     /**
@@ -98,7 +103,7 @@ public class UsuarioController {
     /**
      * Processa a operação de depósito na conta do usuário.
      */
-    public String depositar(JsonNode dados) {
+    public static String depositar(JsonNode dados) {
         String token = dados.get("token").asText();
         double valor = dados.get("valor_enviado").asDouble();
         String cpf = SessaoManager.getCpfPeloToken(token);
@@ -121,38 +126,72 @@ public class UsuarioController {
 
     /**
      * Processa a operação de atualizar um usuário.
+     * Espera um JSON com "token" no nível principal e um objeto "usuario" aninhado com os campos a serem alterados.
      */
     public static String updateUsuario(JsonNode dados) {
-        String nome = dados.get("nome").asText();
-        String cpf = dados.get("cpf").asText();
-        String senha = dados.get("senha").asText();
+        try {
+            // CORREÇÃO: Ler o token do objeto principal 'dados'
+            String token = dados.get("token").asText();
+            JsonNode usuarioNode = dados.get("usuario"); // O objeto com os novos dados (nome e/ou senha)
 
-        // Verifica se o usuário existe
-        Optional<Usuario> usuario = usuarioRepository.findByCpf(cpf);
-        if (usuario.isEmpty()) {
-            return criarResposta(dados.get("operacao").asText(), false, "CPF não encontrado.");
+            String cpf = SessaoManager.getCpfPeloToken(token);
+            if (cpf == null) {
+                return criarResposta("usuario_atualizar", false, "Token inválido ou sessão expirada.");
+            }
+
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByCpf(cpf);
+            if (usuarioOpt.isEmpty()) {
+                return criarResposta("usuario_atualizar", false, "Usuário não encontrado.");
+            }
+
+            Usuario usuarioParaAtualizar = usuarioOpt.get(); // Pega o objeto de usuário existente do banco
+
+            // MELHORIA: Atualiza apenas os campos que foram fornecidos no JSON
+            boolean foiAtualizado = false;
+            if (usuarioNode.has("nome")) {
+                usuarioParaAtualizar.setNome(usuarioNode.get("nome").asText());
+                foiAtualizado = true;
+            }
+            if (usuarioNode.has("senha")) {
+                usuarioParaAtualizar.setSenha(usuarioNode.get("senha").asText());
+                foiAtualizado = true;
+            }
+
+            if (!foiAtualizado) {
+                return criarResposta("usuario_atualizar", false, "Nenhum dado fornecido para atualização.");
+            }
+
+            System.out.println("[CONTROLLER] Atualizando usuário com CPF: " + cpf);
+            usuarioRepository.update(usuarioParaAtualizar); // Envia o objeto modificado para o repositório
+
+            return criarResposta("usuario_atualizar", true, "Usuário atualizado com sucesso.");
+
+        } catch (Exception e) {
+            System.err.println("[CONTROLLER] Erro ao atualizar usuário: " + e.getMessage());
+            e.printStackTrace();
+            return criarResposta("usuario_atualizar", false, "Erro interno ao atualizar o usuário.");
         }
-
-        System.out.println("[CONTROLLER] Tentando atualizar usuário com CPF: " + cpf);
-        Usuario updatedUsuario = new Usuario(nome, cpf, senha, usuario.get().getSaldo());
-        usuarioRepository.update(updatedUsuario);
-
-        return criarResposta(dados.get("operacao").asText(), true, "Usuário criado com sucesso.");
     }
-
+    
     /**
      * Processa a operação de deletar um usuário.
      */
     public static String deleteUsuario(JsonNode dados) {
-        String cpf = dados.get("cpf").asText();
+        String token = dados.get("token").asText();
 
-        // Verifica se o usuário existe
-        Optional<Usuario> usuario = usuarioRepository.findByCpf(cpf);
-        if (usuario.isEmpty()) {
-            return criarResposta(dados.get("operacao").asText(), false, "CPF não encontrado.");
+        String cpf = SessaoManager.getCpfPeloToken(token);
+        System.out.println("[CONTROLLER] Tentando deletar usuário com CPF " + cpf);
+
+        if (cpf == null) {
+            return criarResposta(dados.get("operacao").asText(), false, "Token inválido ou sessão expirada.");
         }
 
-        usuarioRepository.delete(cpf);
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByCpf(cpf);
+        if (usuarioOpt.isEmpty()) {
+            return criarResposta(dados.get("operacao").asText(), false, "Usuário não encontrado.");
+        }
+
+        usuarioRepository.delete(usuarioOpt.get().getCpf());
 
         return criarResposta(dados.get("operacao").asText(), true, "Usuário deletado com sucesso.");
     }

@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Scanner;
 
+import static server.controllers.UsuarioController.deleteUsuario;
+import static server.controllers.UsuarioController.updateUsuario;
+
 public class Client {
 
     private final Connection connection;
@@ -60,6 +63,8 @@ public class Client {
         System.out.println("2. Depositar");
         System.out.println("3. Fazer PIX (Transferência)");
         System.out.println("4. Logout");
+        System.out.println("5. Editar conta");
+        System.out.println("6. Deletar conta");
         System.out.print("Escolha uma opção: ");
     }
 
@@ -80,6 +85,8 @@ public class Client {
             case 2: depositar(); break;
             case 3: fazerPix(); break;
             case 4: logout(); break;
+            case 5: update(); break;
+            case 6: delete(); break;
             default: System.out.println("Opção inválida.");
         }
         return true;
@@ -93,15 +100,12 @@ public class Client {
         String cpf = scanner.nextLine();
         System.out.print("Senha (mínimo 6 caracteres): ");
         String senha = scanner.nextLine();
-        System.out.print("Saldo inicial: ");
-        double saldo = scanner.nextDouble();
 
         ObjectNode request = objectMapper.createObjectNode();
         request.put("operacao", "usuario_criar");
         request.put("nome", nome);
         request.put("cpf", cpf);
         request.put("senha", senha);
-        request.put("saldo", saldo);
 
         processarResposta(request.toString());
     }
@@ -164,6 +168,36 @@ public class Client {
         }
     }
 
+    private void delete() {
+        System.out.print("Deletando este usuário");
+
+        ObjectNode request = objectMapper.createObjectNode();
+        request.put("operacao", "usuario_deletar");
+        request.put("token", this.token);
+
+        processarResposta(request.toString());
+        logout();
+    }
+
+    private void update() {
+        System.out.print("Novo nome (deixar em branco para manter): ");
+        String nome = scanner.nextLine();
+        System.out.print("Nova senha (deixar em branco para manter): ");
+        String senha = scanner.nextLine();
+
+        ObjectNode request = objectMapper.createObjectNode();
+        request.put("operacao", "usuario_atualizar");
+        request.put("token", this.token);
+
+        ObjectNode node = objectMapper.createObjectNode();
+        if(!nome.isEmpty()) node.put("nome", nome);
+        if(!senha.isEmpty()) node.put("senha", senha);
+
+        request.put("usuario", node);
+
+        processarResposta(request.toString());
+    }
+
     private void depositar() {
         System.out.print("Valor a depositar: ");
         double valor = scanner.nextDouble();
@@ -197,6 +231,7 @@ public class Client {
      * Método genérico para enviar uma requisição e imprimir a resposta do servidor.
      */
     private void processarResposta(String requestJson) {
+        System.out.println("Enviando requisição para o servidor: " + requestJson);
         String responseJson = connection.sendRequest(requestJson);
         if (responseJson != null) {
             try {
@@ -213,12 +248,12 @@ public class Client {
         String host = "localhost";
         int port = 9000;
 
-        /*
-        * System.out.println("IP do servidor: ");
-        * String host = scanner.nextLine();
-        * System.out.println("Porta do servidor: ");
-        * int port = scanner.nextInt();
-        * */
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("IP do servidor: ");
+        host = scanner.nextLine();
+        System.out.println("Porta do servidor: ");
+        port = scanner.nextInt();
 
         Client client = new Client(host, port);
         client.start();

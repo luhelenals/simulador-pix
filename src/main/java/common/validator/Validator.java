@@ -30,6 +30,9 @@ public class Validator {
 
         // Chama o método de validação específico para a operação
         switch (operacao) {
+            case CONECTAR:
+                validateConectar(rootNode);
+                break;
             case USUARIO_LOGIN:
                 validateUsuarioLoginClient(rootNode);
                 break;
@@ -110,6 +113,8 @@ public class Validator {
     // ===================================================================================
     // MÉTODOS DE VALIDAÇÃO PRIVADOS (CLIENTE -> SERVIDOR)
     // ===================================================================================
+    private static void validateConectar(JsonNode node) {
+    }
 
     private static void validateUsuarioLoginClient(JsonNode node) {
         validateCpfFormat(node, "cpf");

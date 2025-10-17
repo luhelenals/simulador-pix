@@ -44,7 +44,7 @@ public enum RulesEnum {
                 return enumConstant;
             }
         }
-        
+
         throw new IllegalArgumentException("Nenhuma regra encontrada para o valor: " + rule);
     }
 
