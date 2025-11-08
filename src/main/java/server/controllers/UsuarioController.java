@@ -136,12 +136,12 @@ public class UsuarioController {
 
             String cpf = SessaoManager.getCpfPeloToken(token);
             if (cpf == null) {
-                return criarResposta("usuario_atualizar", false, "Token inválido ou sessão expirada.");
+                return criarResposta(dados.get("operacao").asText(), false, "Token inválido ou sessão expirada.");
             }
 
             Optional<Usuario> usuarioOpt = usuarioRepository.findByCpf(cpf);
             if (usuarioOpt.isEmpty()) {
-                return criarResposta("usuario_atualizar", false, "Usuário não encontrado.");
+                return criarResposta(dados.get("operacao").asText(), false, "Usuário não encontrado.");
             }
 
             Usuario usuarioParaAtualizar = usuarioOpt.get(); // Pega o objeto de usuário existente do banco
@@ -158,18 +158,18 @@ public class UsuarioController {
             }
 
             if (!foiAtualizado) {
-                return criarResposta("usuario_atualizar", false, "Nenhum dado fornecido para atualização.");
+                return criarResposta(dados.get("operacao").asText(), false, "Nenhum dado fornecido para atualização.");
             }
 
             System.out.println("[CONTROLLER] Atualizando usuário com CPF: " + cpf);
             usuarioRepository.update(usuarioParaAtualizar); // Envia o objeto modificado para o repositório
 
-            return criarResposta("usuario_atualizar", true, "Usuário atualizado com sucesso.");
+            return criarResposta(dados.get("operacao").asText(), true, "Usuário atualizado com sucesso.");
 
         } catch (Exception e) {
             System.err.println("[CONTROLLER] Erro ao atualizar usuário: " + e.getMessage());
             e.printStackTrace();
-            return criarResposta("usuario_atualizar", false, "Erro interno ao atualizar o usuário.");
+            return criarResposta(dados.get("operacao").asText(), false, "Erro interno ao atualizar o usuário.");
         }
     }
     
