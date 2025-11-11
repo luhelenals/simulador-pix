@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import java.time.LocalDate;
 import java.util.Scanner;
 
 import static server.controllers.UsuarioController.deleteUsuario;
@@ -62,9 +64,10 @@ public class Client {
         System.out.println("1. Ver Saldo e Dados");
         System.out.println("2. Depositar");
         System.out.println("3. Fazer PIX (Transferência)");
-        System.out.println("4. Logout");
-        System.out.println("5. Editar conta");
-        System.out.println("6. Deletar conta");
+        System.out.println("4. Ver extrato");
+        System.out.println("5. Logout");
+        System.out.println("6. Editar conta");
+        System.out.println("7. Deletar conta");
         System.out.print("Escolha uma opção: ");
     }
 
@@ -84,9 +87,10 @@ public class Client {
             case 1: verSaldo(); break;
             case 2: depositar(); break;
             case 3: fazerPix(); break;
-            case 4: logout(); break;
-            case 5: update(); break;
-            case 6: delete(); break;
+            case 4: verExtrato(); break;
+            case 5: logout(); break;
+            case 6: update(); break;
+            case 7: delete(); break;
             default: System.out.println("Opção inválida.");
         }
         return true;
@@ -147,11 +151,8 @@ public class Client {
     }
 
     private void verSaldo() {
-        ObjectNode request = objectMapper.createObjectNode();
-        request.put("operacao", "usuario_ler");
-        request.put("token", this.token);
+        String responseJson = obterDadosUsuario();
 
-        String responseJson = connection.sendRequest(request.toString());
         if (responseJson != null) {
             try {
                 JsonNode response = objectMapper.readTree(responseJson);
@@ -166,6 +167,14 @@ public class Client {
                 System.err.println("Erro ao processar resposta do servidor.");
             }
         }
+    }
+
+    private String obterDadosUsuario() {
+        ObjectNode request = objectMapper.createObjectNode();
+        request.put("operacao", "usuario_ler");
+        request.put("token", this.token);
+
+        return connection.sendRequest(request.toString());
     }
 
     private void delete() {
@@ -225,6 +234,62 @@ public class Client {
         request.put("valor", valor);
 
         processarResposta(request.toString());
+    }
+
+    private void verExtrato() {
+        System.out.print("Data inicial (yyyy-mm-dd): ");
+        String dataInicial = scanner.nextLine().strip() + "T00:00:00Z";
+        System.out.print("Data final (yyyy-mm-dd, deixar em branco para hoje): ");
+        String dataFinal = scanner.nextLine().strip();
+        dataFinal = dataFinal.isBlank() ? LocalDate.now().toString() : dataFinal + "T00:00:00Z";
+
+        ObjectNode request = objectMapper.createObjectNode();
+        request.put("operacao", "transacao_ler");
+        request.put("token", this.token);
+        request.put("data_inicial", dataInicial);
+        request.put("data_final", dataFinal);
+
+        String dadosUsuarioJson = obterDadosUsuario();
+        String responseJson = connection.sendRequest(request.toString());
+
+        if (responseJson != null && dadosUsuarioJson != null) {
+            try {
+                JsonNode response = objectMapper.readTree(responseJson);
+                System.out.println("Servidor: " + response.get("info").asText());
+
+                JsonNode responseUsuario = objectMapper.readTree(dadosUsuarioJson);
+                String cpfUsuario = responseUsuario.get("cpf").asText();
+
+                if (response.get("status").asBoolean()) {
+                    JsonNode transacoesNode = response.get("transacoes");
+                    for (JsonNode transacao : transacoesNode) {
+                        String id = transacao.get("id").asText();
+                        double valor = transacao.get("valor_enviado").asDouble();
+
+                        JsonNode enviadorNode = transacao.get("usuario_enviador");
+                        String nome_enviador = enviadorNode.get("nome").asText();
+                        String cpf_enviador = enviadorNode.get("cpf").asText();
+
+                        JsonNode recebedorNode = transacao.get("usuario_recebedor");
+                        String nome_recebedor = recebedorNode.get("nome").asText();
+                        String cpf_recebedor = recebedorNode.get("cpf").asText();
+
+                        String criado = transacao.get("criado_em").asText().substring(0,9);
+
+                        System.out.println("=====================");
+                        System.out.println(cpf_recebedor.equals(cpfUsuario) ? "RECEBIDO" : "ENVIADO");
+                        System.out.println("Data: " + criado);
+                        System.out.printf("Valor: R$ %.2f\n", valor);
+                        System.out.println(cpf_recebedor.equals(cpfUsuario) ? "Origem: " : "Destino: ");
+                        System.out.println("  Nome: " + (cpf_recebedor.equals(cpfUsuario) ? nome_enviador : nome_recebedor));
+                        System.out.println("  CPF: " + (cpf_recebedor.equals(cpfUsuario) ? cpf_enviador : cpf_recebedor));
+                        System.out.println("=====================");
+                    }
+                }
+            } catch (JsonProcessingException e) {
+                System.err.println("Erro ao processar resposta do servidor.");
+            }
+        }
     }
 
     /**
