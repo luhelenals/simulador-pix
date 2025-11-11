@@ -99,6 +99,9 @@ public class ClientHandler implements Runnable {
                 case DEPOSITAR:
                     response = UsuarioController.depositar(json);
                     break;
+                case ERRO_SERVIDOR:
+                    response = criarResposta(json.get("operacao").asText(), true, "Mensagem de erro recebida.");
+                    break;
                 default:
                     throw new IllegalArgumentException("Operação do cliente desconhecida ou não suportada: " + operacao);
             }
