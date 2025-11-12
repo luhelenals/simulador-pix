@@ -9,9 +9,6 @@ import java.time.LocalDate;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import static server.controllers.UsuarioController.deleteUsuario;
-import static server.controllers.UsuarioController.updateUsuario;
-
 public class Client {
 
     private final Connection connection;
@@ -224,12 +221,16 @@ public class Client {
             request.put("valor_enviado", valor);
 
             processarResposta(request.toString());
-        }
-        catch (InputMismatchException e) {
-            System.err.print("Erro: Por favor, digite um valor numérico válido.");
-        }
-        catch (Exception e) {
-            System.err.print("Erro inesperado ao ler a entrada: " + e.getMessage());
+
+        } catch (InputMismatchException e) {
+            System.err.println("Erro: digite um valor numérico válido (casas decimais com vírgula).");
+            scanner.nextLine();
+
+        } catch (Exception e) {
+            System.err.println("Erro inesperado ao ler a entrada: " + e.getMessage());
+            if (scanner.hasNextLine()) {
+                scanner.nextLine();
+            }
         }
     }
 
