@@ -26,7 +26,7 @@ public class Server {
                     Socket clientSocket = serverSocket.accept(); // Bloqueia até um cliente se conectar
                     System.out.println("Cliente conectado: " + clientSocket.getInetAddress().getHostAddress());
 
-                    // 3. CORREÇÃO PRINCIPAL: Inicia uma nova Thread para cada cliente
+                    // 3. Inicia uma nova Thread para cada cliente
                     // Cria o handler para o cliente
                     ClientHandler clientHandler = new ClientHandler(clientSocket);
                     // Cria uma nova Thread para executar o handler
@@ -42,7 +42,6 @@ public class Server {
         } catch (IOException e) {
             System.err.println("Erro fatal ao iniciar o servidor na porta " + PORTA + ": " + e.getMessage());
             e.printStackTrace();
-            // Se não conseguirmos nem abrir a porta, o programa não pode continuar.
         }
     }
 }

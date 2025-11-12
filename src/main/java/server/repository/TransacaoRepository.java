@@ -46,7 +46,7 @@ public class TransacaoRepository {
 
     // Buscar o extrato
     public List<Transacao> findByCpf(String cpf) {
-        String sql = "SELECT * FROM transacoes WHERE cpf_remetente = ? OR cpf_destinataario = ?";
+        String sql = "SELECT * FROM transacoes WHERE cpf_remetente = ? OR cpf_destinatario = ?";
 
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -59,7 +59,7 @@ public class TransacaoRepository {
 
             while (rs.next()) {
                 double valor = rs.getDouble("valor");
-                LocalDateTime data = LocalDateTime.ofInstant(rs.getDate("dataTransacao").toInstant(), ZoneId.systemDefault());
+                LocalDateTime data = LocalDateTime.ofInstant(rs.getDate("data_transacao").toInstant(), ZoneId.systemDefault());
                 String destino = rs.getString("cpf_destinatario");
                 String remetente = rs.getString("cpf_remetente");
 

@@ -241,7 +241,7 @@ public class Client {
         String dataInicial = scanner.nextLine().strip() + "T00:00:00Z";
         System.out.print("Data final (yyyy-mm-dd, deixar em branco para hoje): ");
         String dataFinal = scanner.nextLine().strip();
-        dataFinal = dataFinal.isBlank() ? LocalDate.now().toString() : dataFinal + "T00:00:00Z";
+        dataFinal = (dataFinal.isBlank() ? LocalDate.now().toString() : dataFinal) + "T00:00:00Z";
 
         ObjectNode request = objectMapper.createObjectNode();
         request.put("operacao", "transacao_ler");
@@ -258,6 +258,10 @@ public class Client {
                 System.out.println("Servidor: " + response.get("info").asText());
 
                 JsonNode responseUsuario = objectMapper.readTree(dadosUsuarioJson);
+
+                System.out.println("dadosUsuarioJson = " + dadosUsuarioJson);
+                System.out.println("responseUsuario = " + responseUsuario);
+
                 String cpfUsuario = responseUsuario.get("cpf").asText();
 
                 if (response.get("status").asBoolean()) {
@@ -278,6 +282,7 @@ public class Client {
 
                         System.out.println("=====================");
                         System.out.println(cpf_recebedor.equals(cpfUsuario) ? "RECEBIDO" : "ENVIADO");
+                        System.out.println("ID: " + id);
                         System.out.println("Data: " + criado);
                         System.out.printf("Valor: R$ %.2f\n", valor);
                         System.out.println(cpf_recebedor.equals(cpfUsuario) ? "Origem: " : "Destino: ");

@@ -9,6 +9,10 @@ import common.models.Usuario;
 import server.repository.TransacaoRepository;
 import server.repository.UsuarioRepository;
 import common.util.SessaoManager;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import static common.util.RespostaManager.criarResposta;
@@ -38,10 +42,21 @@ public class TransacaoController {
         }
 
         List<Transacao> transacoesEncontradas = transacaoRepository.findByCpf(cpf);
+        ArrayNode transacoesArrayNode = objectMapper.createArrayNode();
 
-        ArrayNode transacoesArrayNode = objectMapper.valueToTree(transacoesEncontradas);
+        for (Transacao transacao : transacoesEncontradas) {
+            ObjectNode transacaoNode = objectMapper.valueToTree(transacao);
+            LocalDateTime dataOriginal = transacao.getDataTransacao();
+
+            if (dataOriginal != null) {
+                String dataFormatadaUTC = dataOriginal.toInstant(ZoneOffset.UTC).toString();
+                transacaoNode.put("data_transacao", dataFormatadaUTC);
+            }
+
+            transacoesArrayNode.add(transacaoNode);
+        }
+
         ObjectNode resposta = objectMapper.createObjectNode();
-
         resposta.put("operacao", dados.get("operacao").asText());
         resposta.put("status", true);
         resposta.put("info", "Dados do usuário recuperados com sucesso.");
