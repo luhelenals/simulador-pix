@@ -41,12 +41,10 @@ public class ClientHandler implements Runnable {
                 System.out.println("Recebido do cliente: " + requestJson);
 
                 try {
-                    System.out.println("Entrou no try");
                     String response = handleRequest(requestJson);
-                    System.out.println(response);
+                    System.out.println("Enviando para o cliente: " + response + "\n");
                     writer.println(response);
                 } catch (Exception e) {
-                    System.out.println("Entrou no catch");
                     System.out.println(e);
                 }
             }

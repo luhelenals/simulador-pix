@@ -56,10 +56,12 @@ public class TransacaoController {
             transacoesArrayNode.add(transacaoNode);
         }
 
+        System.out.println("[CONTROLLER]: " + transacoesArrayNode.toString());
+
         ObjectNode resposta = objectMapper.createObjectNode();
         resposta.put("operacao", dados.get("operacao").asText());
         resposta.put("status", true);
-        resposta.put("info", "Dados do usuário recuperados com sucesso.");
+        resposta.put("info", "Transações do usuário recuperados com sucesso.");
         resposta.set("transacoes", transacoesArrayNode);
 
         return resposta.toString();

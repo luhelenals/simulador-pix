@@ -53,7 +53,7 @@ public class Connection {
      * @return A string JSON da resposta do servidor, ou null em caso de erro.
      */
     public String sendRequest(String jsonRequest) {
-        System.out.println("[CONNECTION] Enviando para servidor");
+        System.out.println("\n[CONNECTION] Enviando para servidor: " + jsonRequest);
         try {
             writer.println(jsonRequest);
             return reader.readLine();

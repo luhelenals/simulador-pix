@@ -159,6 +159,7 @@ public class Client {
                 System.out.println("Servidor: " + response.get("info").asText());
                 if (response.get("status").asBoolean()) {
                     JsonNode usuario = response.get("usuario");
+                    System.out.println("\nDADOS DO USUARIO");
                     System.out.println("  Nome: " + usuario.get("nome").asText());
                     System.out.println("  CPF: " + usuario.get("cpf").asText());
                     System.out.printf("  Saldo: R$ %.2f\n", usuario.get("saldo").asDouble());
@@ -258,11 +259,9 @@ public class Client {
                 System.out.println("Servidor: " + response.get("info").asText());
 
                 JsonNode responseUsuario = objectMapper.readTree(dadosUsuarioJson);
-
-                System.out.println("dadosUsuarioJson = " + dadosUsuarioJson);
-                System.out.println("responseUsuario = " + responseUsuario);
-
-                String cpfUsuario = responseUsuario.get("cpf").asText();
+                String usuario = responseUsuario.get("usuario").asText();
+                JsonNode usuarioJson = objectMapper.readTree(usuario);
+                String cpfUsuario = usuarioJson.get("cpf").asText();
 
                 if (response.get("status").asBoolean()) {
                     JsonNode transacoesNode = response.get("transacoes");
@@ -291,6 +290,9 @@ public class Client {
                         System.out.println("=====================");
                     }
                 }
+                else {
+                    System.out.println("Erro: " + response.get("info").asText());
+                }
             } catch (JsonProcessingException e) {
                 System.err.println("Erro ao processar resposta do servidor.");
             }
@@ -301,12 +303,11 @@ public class Client {
      * Método genérico para enviar uma requisição e imprimir a resposta do servidor.
      */
     private void processarResposta(String requestJson) {
-        System.out.println("Enviando requisição para o servidor: " + requestJson);
         String responseJson = connection.sendRequest(requestJson);
         if (responseJson != null) {
             try {
                 JsonNode response = objectMapper.readTree(responseJson);
-                System.out.println("Servidor: " + response.get("info").asText());
+                System.out.println("Servidor: " + response.get("info").asText() + "\n");
             } catch (JsonProcessingException e) {
                 System.err.println("Erro ao processar resposta do servidor.");
             }
