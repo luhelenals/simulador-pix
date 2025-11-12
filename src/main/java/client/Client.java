@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.time.LocalDate;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import static server.controllers.UsuarioController.deleteUsuario;
@@ -213,15 +214,23 @@ public class Client {
 
     private void depositar() {
         System.out.print("Valor a depositar: ");
-        double valor = scanner.nextDouble();
-        scanner.nextLine();
+        try {
+            double valor = scanner.nextDouble();
+            scanner.nextLine();
 
-        ObjectNode request = objectMapper.createObjectNode();
-        request.put("operacao", "depositar");
-        request.put("token", this.token);
-        request.put("valor_enviado", valor);
+            ObjectNode request = objectMapper.createObjectNode();
+            request.put("operacao", "depositar");
+            request.put("token", this.token);
+            request.put("valor_enviado", valor);
 
-        processarResposta(request.toString());
+            processarResposta(request.toString());
+        }
+        catch (InputMismatchException e) {
+            System.err.print("Erro: Por favor, digite um valor numérico válido.");
+        }
+        catch (Exception e) {
+            System.err.print("Erro inesperado ao ler a entrada: " + e.getMessage());
+        }
     }
 
     private void fazerPix() {
