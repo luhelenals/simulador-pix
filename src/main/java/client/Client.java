@@ -135,6 +135,9 @@ public class Client {
                     this.token = response.get("token").asText(); // Armazena o token
                     System.out.println("Token recebido do servidor: " + token);
                 }
+                else {
+                    System.out.println("Erro ao realizar o login: " + response.get("info").asText());
+                }
             } catch (JsonProcessingException e) {
                 System.err.println("Erro ao processar resposta do servidor.");
             }

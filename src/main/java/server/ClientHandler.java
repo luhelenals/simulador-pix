@@ -46,6 +46,9 @@ public class ClientHandler implements Runnable {
                     writer.println(response);
                 } catch (Exception e) {
                     System.out.println(e);
+                    String response = criarResposta("usuario_login", false, e.getMessage());
+                    System.out.println("Enviando para o cliente: " + response + "\n");
+                    writer.println(response);
                 }
             }
         } catch (IOException e) {
