@@ -293,7 +293,7 @@ public class Client {
                             String nome_recebedor = recebedorNode.get("nome").asText();
                             String cpf_recebedor = recebedorNode.get("cpf").asText();
 
-                            String criado = transacao.get("criado_em").asText().substring(0, 9);
+                            String criado = transacao.get("criado_em").asText().substring(0, 10);
 
                             System.out.println("=====================");
                             System.out.println(cpf_recebedor.equals(cpfUsuario) ? "RECEBIDO" : "ENVIADO");

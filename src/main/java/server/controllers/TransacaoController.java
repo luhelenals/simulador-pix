@@ -53,12 +53,31 @@ public class TransacaoController {
         ArrayNode transacoesArrayNode = objectMapper.createArrayNode();
 
         for (Transacao transacao : transacoesEncontradas) {
-            ObjectNode transacaoNode = objectMapper.valueToTree(transacao);
+            ObjectNode transacaoNode = objectMapper.createObjectNode();
+
+            // Formatar data da transação
             LocalDateTime dataOriginal = transacao.getDataTransacao();
             if (dataOriginal != null) {
                 String dataFormatadaUTC = dataOriginal.toInstant(ZoneOffset.UTC).toString();
                 transacaoNode.put("data_transacao", dataFormatadaUTC);
+
+                transacaoNode.put("criado_em", dataFormatadaUTC);
+                transacaoNode.put("atualizado_em", dataFormatadaUTC);
             }
+
+            ObjectNode usuarioEnviadorNode = objectMapper.createObjectNode();
+            ObjectNode usuarioRecebedorNode = objectMapper.createObjectNode();
+
+            usuarioEnviadorNode.put("cpf", transacao.getRemetente().getCpf());
+            usuarioEnviadorNode.put("nome", transacao.getRemetente().getNome());
+
+            usuarioRecebedorNode.put("cpf", transacao.getDestinatario().getCpf());
+            usuarioRecebedorNode.put("nome", transacao.getDestinatario().getNome());
+
+            transacaoNode.put("valor_enviado", transacao.getValor());
+            transacaoNode.put("id", transacao.getId());
+            transacaoNode.set("usuario_enviador", usuarioEnviadorNode);
+            transacaoNode.set("usuario_recebedor", usuarioRecebedorNode);
 
             transacoesArrayNode.add(transacaoNode);
         }
