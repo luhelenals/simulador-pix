@@ -272,35 +272,39 @@ public class Client {
                 System.out.println("Servidor: " + response.get("info").asText());
 
                 JsonNode responseUsuario = objectMapper.readTree(dadosUsuarioJson);
-                String usuario = responseUsuario.get("usuario").asText();
-                JsonNode usuarioJson = objectMapper.readTree(usuario);
-                String cpfUsuario = usuarioJson.get("cpf").asText();
+                JsonNode usuario = responseUsuario.get("usuario");
+                String cpfUsuario = usuario.get("cpf").asText();
 
                 if (response.get("status").asBoolean()) {
                     JsonNode transacoesNode = response.get("transacoes");
-                    for (JsonNode transacao : transacoesNode) {
-                        String id = transacao.get("id").asText();
-                        double valor = transacao.get("valor_enviado").asDouble();
+                    System.out.println("Recebido do servidor (transacoesNode): " + transacoesNode);
+                    if (transacoesNode.isEmpty())
+                        System.out.println("Não foram encontradas transações para esse período.");
+                    else {
+                        for (JsonNode transacao : transacoesNode) {
+                            String id = transacao.get("id").asText();
+                            double valor = transacao.get("valor_enviado").asDouble();
 
-                        JsonNode enviadorNode = transacao.get("usuario_enviador");
-                        String nome_enviador = enviadorNode.get("nome").asText();
-                        String cpf_enviador = enviadorNode.get("cpf").asText();
+                            JsonNode enviadorNode = transacao.get("usuario_enviador");
+                            String nome_enviador = enviadorNode.get("nome").asText();
+                            String cpf_enviador = enviadorNode.get("cpf").asText();
 
-                        JsonNode recebedorNode = transacao.get("usuario_recebedor");
-                        String nome_recebedor = recebedorNode.get("nome").asText();
-                        String cpf_recebedor = recebedorNode.get("cpf").asText();
+                            JsonNode recebedorNode = transacao.get("usuario_recebedor");
+                            String nome_recebedor = recebedorNode.get("nome").asText();
+                            String cpf_recebedor = recebedorNode.get("cpf").asText();
 
-                        String criado = transacao.get("criado_em").asText().substring(0,9);
+                            String criado = transacao.get("criado_em").asText().substring(0, 9);
 
-                        System.out.println("=====================");
-                        System.out.println(cpf_recebedor.equals(cpfUsuario) ? "RECEBIDO" : "ENVIADO");
-                        System.out.println("ID: " + id);
-                        System.out.println("Data: " + criado);
-                        System.out.printf("Valor: R$ %.2f\n", valor);
-                        System.out.println(cpf_recebedor.equals(cpfUsuario) ? "Origem: " : "Destino: ");
-                        System.out.println("  Nome: " + (cpf_recebedor.equals(cpfUsuario) ? nome_enviador : nome_recebedor));
-                        System.out.println("  CPF: " + (cpf_recebedor.equals(cpfUsuario) ? cpf_enviador : cpf_recebedor));
-                        System.out.println("=====================");
+                            System.out.println("=====================");
+                            System.out.println(cpf_recebedor.equals(cpfUsuario) ? "RECEBIDO" : "ENVIADO");
+                            System.out.println("ID: " + id);
+                            System.out.println("Data: " + criado);
+                            System.out.printf("Valor: R$ %.2f\n", valor);
+                            System.out.println(cpf_recebedor.equals(cpfUsuario) ? "Origem: " : "Destino: ");
+                            System.out.println("  Nome: " + (cpf_recebedor.equals(cpfUsuario) ? nome_enviador : nome_recebedor));
+                            System.out.println("  CPF: " + (cpf_recebedor.equals(cpfUsuario) ? cpf_enviador : cpf_recebedor));
+                            System.out.println("=====================");
+                        }
                     }
                 }
                 else {

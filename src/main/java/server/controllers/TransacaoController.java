@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule; // <-- O import está aqui
+import com.fasterxml.jackson.databind.SerializationFeature; // <-- O import está aqui
+
 import common.models.Transacao;
 import common.models.Usuario;
 import server.repository.TransacaoRepository;
@@ -12,7 +16,6 @@ import common.util.SessaoManager;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import static common.util.RespostaManager.criarResposta;
@@ -22,6 +25,11 @@ public class TransacaoController {
     private static final UsuarioRepository usuarioRepository = new UsuarioRepository();
     private static final TransacaoRepository transacaoRepository = new TransacaoRepository();
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    static {
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
 
     public TransacaoController() {}
 
@@ -41,13 +49,16 @@ public class TransacaoController {
             return criarResposta(dados.get("operacao").asText(), false, "Usuário não encontrado.");
         }
 
+        System.out.println("[CONTROLLER] Iniciado busca de transações");
+
         List<Transacao> transacoesEncontradas = transacaoRepository.findByCpf(cpf);
         ArrayNode transacoesArrayNode = objectMapper.createArrayNode();
+
+        System.out.println("[CONTROLLER] Fim da busca de transações");
 
         for (Transacao transacao : transacoesEncontradas) {
             ObjectNode transacaoNode = objectMapper.valueToTree(transacao);
             LocalDateTime dataOriginal = transacao.getDataTransacao();
-
             if (dataOriginal != null) {
                 String dataFormatadaUTC = dataOriginal.toInstant(ZoneOffset.UTC).toString();
                 transacaoNode.put("data_transacao", dataFormatadaUTC);
@@ -98,9 +109,6 @@ public class TransacaoController {
         if (remetente.getSaldo() < valor) {
             return criarResposta(dados.get("operacao").asText(), false, "Saldo insuficiente.");
         }
-
-        // ATENÇÃO: Em um sistema real, as 4 operações abaixo (sacar, depositar, 2 updates)
-        // deveriam estar dentro de uma única transação de banco de dados para garantir a consistência.
 
         Usuario destinatario = destinatarioOpt.get();
 

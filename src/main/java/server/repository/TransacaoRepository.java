@@ -51,15 +51,25 @@ public class TransacaoRepository {
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            System.out.println("[REPOSITORY] Entrou try");
             pstmt.setString(1, cpf);
             pstmt.setString(2, cpf);
             ResultSet rs = pstmt.executeQuery();
 
+            System.out.println("[REPOSITORY] Checkpoint #1");
+
             List<Transacao> transacoes = new ArrayList<>();
 
             while (rs.next()) {
+                System.out.println("[REPOSITORY] Checkpoint #2");
+
                 double valor = rs.getDouble("valor");
-                LocalDateTime data = LocalDateTime.ofInstant(rs.getDate("data_transacao").toInstant(), ZoneId.systemDefault());
+
+                System.out.println("[REPOSITORY] rs.getString(\"data_transacao\"): " + rs.getString("data_transacao"));
+
+                String dataComoString = rs.getString("data_transacao");
+                LocalDateTime data = LocalDateTime.parse(dataComoString);
+
                 String destino = rs.getString("cpf_destinatario");
                 String remetente = rs.getString("cpf_remetente");
 
@@ -71,7 +81,7 @@ public class TransacaoRepository {
                 else transacao.setDestinatario(userDestinatario.get());
 
                 Optional<Usuario> userRemetente = usuarioRepository.findByCpf(remetente);
-                if(userRemetente.isEmpty()) transacao.setDestinatario(new Usuario());
+                if(userRemetente.isEmpty()) transacao.setRemetente(new Usuario());
                 else transacao.setRemetente(userRemetente.get());
 
                 transacao.setValor(valor);
@@ -82,10 +92,12 @@ public class TransacaoRepository {
             return transacoes;
 
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar usuário por CPF: " + e.getMessage());
+            // Mensagem de erro melhorada para este contexto
+            System.err.println("Erro ao buscar transações por CPF: " + e.getMessage());
             e.printStackTrace();
         }
+
+        // Retorna uma lista vazia se o 'try' falhar
         return new ArrayList<>();
     }
-
 }
