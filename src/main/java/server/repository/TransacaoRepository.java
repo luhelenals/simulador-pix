@@ -51,21 +51,14 @@ public class TransacaoRepository {
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            System.out.println("[REPOSITORY] Entrou try");
             pstmt.setString(1, cpf);
             pstmt.setString(2, cpf);
             ResultSet rs = pstmt.executeQuery();
 
-            System.out.println("[REPOSITORY] Checkpoint #1");
-
             List<Transacao> transacoes = new ArrayList<>();
 
             while (rs.next()) {
-                System.out.println("[REPOSITORY] Checkpoint #2");
-
                 double valor = rs.getDouble("valor");
-
-                System.out.println("[REPOSITORY] rs.getString(\"data_transacao\"): " + rs.getString("data_transacao"));
 
                 String dataComoString = rs.getString("data_transacao");
                 LocalDateTime data = LocalDateTime.parse(dataComoString);

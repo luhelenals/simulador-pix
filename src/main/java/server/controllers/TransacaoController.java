@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule; // <-- O import está aqui
-import com.fasterxml.jackson.databind.SerializationFeature; // <-- O import está aqui
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import common.models.Transacao;
 import common.models.Usuario;
@@ -49,12 +49,8 @@ public class TransacaoController {
             return criarResposta(dados.get("operacao").asText(), false, "Usuário não encontrado.");
         }
 
-        System.out.println("[CONTROLLER] Iniciado busca de transações");
-
         List<Transacao> transacoesEncontradas = transacaoRepository.findByCpf(cpf);
         ArrayNode transacoesArrayNode = objectMapper.createArrayNode();
-
-        System.out.println("[CONTROLLER] Fim da busca de transações");
 
         for (Transacao transacao : transacoesEncontradas) {
             ObjectNode transacaoNode = objectMapper.valueToTree(transacao);
@@ -67,7 +63,7 @@ public class TransacaoController {
             transacoesArrayNode.add(transacaoNode);
         }
 
-        System.out.println("[CONTROLLER]: " + transacoesArrayNode.toString());
+        System.out.println("[CONTROLLER] Transações encontradas: " + transacoesArrayNode.toString());
 
         ObjectNode resposta = objectMapper.createObjectNode();
         resposta.put("operacao", dados.get("operacao").asText());
