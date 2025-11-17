@@ -30,8 +30,8 @@ public class TransacaoRepository {
         try (Connection conn = Database.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, transacao.getRemetente().getCpf());
-            pstmt.setString(2, transacao.getDestinatario().getCpf());
+            pstmt.setString(1, transacao.getCpfRemetente());
+            pstmt.setString(2, transacao.getCpfDestinatario());
             pstmt.setDouble(3, transacao.getValor());
             // Converte o objeto LocalDateTime para uma String antes de salvar no banco
             pstmt.setString(4, transacao.getDataTransacao().format(formatter));
@@ -69,13 +69,8 @@ public class TransacaoRepository {
                 Transacao transacao = new Transacao();
                 transacao.setDataTransacao(data);
 
-                Optional<Usuario> userDestinatario = usuarioRepository.findByCpf(destino);
-                if(userDestinatario.isEmpty()) transacao.setDestinatario(new Usuario());
-                else transacao.setDestinatario(userDestinatario.get());
-
-                Optional<Usuario> userRemetente = usuarioRepository.findByCpf(remetente);
-                if(userRemetente.isEmpty()) transacao.setRemetente(new Usuario());
-                else transacao.setRemetente(userRemetente.get());
+                transacao.setCpfDestinatario(destino);
+                transacao.setCpfRemetente(remetente);
 
                 transacao.setValor(valor);
 

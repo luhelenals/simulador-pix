@@ -108,11 +108,29 @@ public class TransacaoController {
                     ObjectNode usuarioEnviadorNode = objectMapper.createObjectNode();
                     ObjectNode usuarioRecebedorNode = objectMapper.createObjectNode();
 
-                    usuarioEnviadorNode.put("cpf", transacao.getRemetente().getCpf());
-                    usuarioEnviadorNode.put("nome", transacao.getRemetente().getNome());
+                    // Obter CPF da transação e nome do CPF
+                    String enviadorCpf = transacao.getCpfRemetente();
+                    String enviadorNome = "Usuário Inexistente";
 
-                    usuarioRecebedorNode.put("cpf", transacao.getDestinatario().getCpf());
-                    usuarioRecebedorNode.put("nome", transacao.getDestinatario().getNome());
+                    String recebedorCpf = transacao.getCpfDestinatario();
+                    String recebedorNome = "Usuário Inexistente";
+
+                    Optional<Usuario> recebedorOpt = usuarioRepository.findByCpf(recebedorCpf);
+                    Optional<Usuario> enviadorOpt = usuarioRepository.findByCpf(enviadorCpf);
+
+                    if (enviadorOpt.isPresent()) {
+                        enviadorNome = enviadorOpt.get().getNome();
+                    }
+
+                    if (recebedorOpt.isPresent()) {
+                        recebedorNome = recebedorOpt.get().getNome();
+                    }
+
+                    usuarioEnviadorNode.put("cpf", enviadorCpf);
+                    usuarioEnviadorNode.put("nome", enviadorNome);
+
+                    usuarioRecebedorNode.put("cpf", recebedorCpf);
+                    usuarioRecebedorNode.put("nome", recebedorNome);
 
                     transacaoNode.put("valor_enviado", transacao.getValor());
                     transacaoNode.put("id", transacao.getId());
@@ -185,7 +203,7 @@ public class TransacaoController {
         usuarioRepository.update(remetente);
         usuarioRepository.update(destinatario);
 
-        Transacao novaTransacao = new Transacao(remetente, destinatario, valor);
+        Transacao novaTransacao = new Transacao(remetente.getCpf(), destinatario.getCpf(), valor);
         transacaoRepository.save(novaTransacao);
 
         return criarResposta(dados.get("operacao").asText(), true, "Transação realizada com sucesso.");

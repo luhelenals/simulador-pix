@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 public class Transacao {
 
     private int id; // O ID será gerado pelo banco de dados (autoincremento)
-    private Usuario remetente;
-    private Usuario destinatario;
+    private String cpfRemetente;
+    private String cpfDestinatario;
     private double valor;
     private LocalDateTime dataTransacao;
 
@@ -20,13 +20,13 @@ public class Transacao {
     /**
      * Construtor para criar uma nova transação.
      * A data da transação é definida para o momento da criação do objeto.
-     * @param remetente O objeto Usuario que está enviando o dinheiro.
-     * @param destinatario O objeto Usuario que está recebendo o dinheiro.
+     * @param cpfRemetente O CPF do usuário que está enviando o dinheiro.
+     * @param cpfDestinatario O CPF do usuário que está recebendo o dinheiro.
      * @param valor O valor que está sendo transferido.
      */
-    public Transacao(Usuario remetente, Usuario destinatario, double valor) {
-        this.remetente = remetente;
-        this.destinatario = destinatario;
+    public Transacao(String cpfRemetente, String cpfDestinatario, double valor) {
+        this.cpfRemetente = cpfRemetente;
+        this.cpfDestinatario = cpfDestinatario;
         this.valor = valor;
         this.dataTransacao = LocalDateTime.now(); // Define a data/hora atual
     }
@@ -41,20 +41,20 @@ public class Transacao {
         this.id = id;
     }
 
-    public Usuario getRemetente() {
-        return remetente;
+    public String getCpfRemetente() {
+        return cpfRemetente;
     }
 
-    public void setRemetente(Usuario remetente) {
-        this.remetente = remetente;
+    public void setCpfRemetente(String cpfRemetente) {
+        this.cpfRemetente = cpfRemetente;
     }
 
-    public Usuario getDestinatario() {
-        return destinatario;
+    public String getCpfDestinatario() {
+        return cpfDestinatario;
     }
 
-    public void setDestinatario(Usuario destinatario) {
-        this.destinatario = destinatario;
+    public void setCpfDestinatario(String cpfDestinatario) {
+        this.cpfDestinatario = cpfDestinatario;
     }
 
     public double getValor() {
@@ -71,16 +71,5 @@ public class Transacao {
 
     public void setDataTransacao(LocalDateTime dataTransacao) {
         this.dataTransacao = dataTransacao;
-    }
-
-    @Override
-    public String toString() {
-        return "Transacao{" +
-                "id=" + id +
-                ", remetenteCpf='" + (remetente != null ? remetente.getCpf() : "N/A") + '\'' +
-                ", destinatarioCpf='" + (destinatario != null ? destinatario.getCpf() : "N/A") + '\'' +
-                ", valor=" + valor +
-                ", dataTransacao=" + dataTransacao +
-                '}';
     }
 }
