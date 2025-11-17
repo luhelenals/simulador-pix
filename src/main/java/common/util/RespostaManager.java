@@ -3,6 +3,10 @@ package common.util;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.javatuples.Pair;
+
+import java.util.List;
+
 public class RespostaManager {
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -17,12 +21,15 @@ public class RespostaManager {
         return resposta.toString();
     }
 
-    public static String criarResposta(String operacao, boolean status, String info, String paramName, String paramValue) {
+    public static String criarResposta(String operacao, boolean status, String info, List<Pair<String, String>> params) {
         ObjectNode resposta = mapper.createObjectNode();
         resposta.put("operacao", operacao);
         resposta.put("status", status);
         resposta.put("info", info);
-        resposta.put(paramName, paramValue);
+        for (Pair param : params) {
+            resposta.put(param.getValue0().toString(), param.getValue1().toString());
+        }
+
         return resposta.toString();
     }
 }
