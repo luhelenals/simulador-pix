@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import common.models.Usuario;
+import org.javatuples.Pair;
 import server.repository.UsuarioRepository;
 import common.util.SessaoManager;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import static common.util.RespostaManager.*;
 
@@ -57,7 +61,10 @@ public class UsuarioController {
 
         String token = SessaoManager.criarSessao(cpf);
 
-        return criarResposta(dados.get("operacao").asText(), true, "Login bem-sucedido.", "token", token);
+        List<Pair<String, String>> pairs = new ArrayList<>();
+        pairs.add(Pair.with("token", token));
+
+        return criarResposta(dados.get("operacao").asText(), true, "Login bem-sucedido.", pairs);
     }
 
     /**

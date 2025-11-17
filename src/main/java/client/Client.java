@@ -141,7 +141,12 @@ public class Client {
                     System.out.println("Erro ao realizar o login: " + response.get("info").asText());
                 }
             } catch (JsonProcessingException e) {
-                System.err.println("Erro ao processar resposta do servidor.");
+                System.err.println("Erro: " + e.getMessage());
+
+                ObjectNode resposta = objectMapper.createObjectNode();
+                resposta.put("operacao", "erro_servidor");
+                resposta.put("operacao_enviada", "usuario_login");
+                resposta.put("info", e.getMessage());
             }
         }
     }
@@ -170,7 +175,14 @@ public class Client {
                     System.out.printf("  Saldo: R$ %.2f\n", usuario.get("saldo").asDouble());
                 }
             } catch (JsonProcessingException e) {
-                System.err.println("Erro ao processar resposta do servidor.");
+                System.err.println("Erro: " + e.getMessage());
+
+                System.err.println("Erro: " + e.getMessage());
+
+                ObjectNode resposta = objectMapper.createObjectNode();
+                resposta.put("operacao", "erro_servidor");
+                resposta.put("operacao_enviada", "usuario_login");
+                resposta.put("info", e.getMessage());
             }
         }
     }
@@ -290,7 +302,6 @@ public class Client {
 
                 if (response.get("status").asBoolean()) {
                     JsonNode transacoesNode = response.get("transacoes");
-                    System.out.println("Recebido do servidor (transacoesNode): " + transacoesNode);
                     if (transacoesNode.isEmpty())
                         System.out.println("Não foram encontradas transações para esse período.");
                     else {
@@ -325,8 +336,13 @@ public class Client {
                 }
             } catch (Exception e) {
                 System.err.println("Erro: " + e.getMessage());
-                criarResposta("erro_servidor", false, "Erro na operação transacao_ler.");
             }
+        }
+        else {
+            ObjectNode resposta = objectMapper.createObjectNode();
+            resposta.put("operacao", "erro_servidor");
+            resposta.put("operacao_enviada", "transacao_ler");
+            resposta.put("info", "Servidor enviou mensagem nula.");
         }
     }
 
@@ -335,13 +351,35 @@ public class Client {
      */
     private void processarResposta(String requestJson) {
         String responseJson = connection.sendRequest(requestJson);
+
         if (responseJson != null) {
             try {
                 JsonNode response = objectMapper.readTree(responseJson);
                 System.out.println("Servidor: " + response.get("info").asText() + "\n");
+
             } catch (JsonProcessingException e) {
-                System.err.println("Erro ao processar resposta do servidor.");
+
+                System.err.println("Erro: A resposta do servidor não é um JSON válido: " + e.getMessage());
+
+                try {
+                    JsonNode rootNode = objectMapper.readTree(requestJson);
+                    String operacao = rootNode.path("operacao").asText();
+
+                    ObjectNode resposta = objectMapper.createObjectNode();
+                    resposta.put("operacao", "erro_servidor");
+                    resposta.put("operacao_enviada", operacao);
+                    resposta.put("info", "Falha ao processar resposta do servidor: " + e.getMessage());
+
+                    System.err.println("Erro formatado: " + resposta.toString());
+
+                } catch (JsonProcessingException e2) {
+                    System.err.println("Falha CRÍTICA: A resposta do servidor E a requisição original são JSONs inválidos.");
+                    System.err.println("Erro da Resposta: " + e.getMessage());
+                    System.err.println("Erro da Requisição: " + e2.getMessage());
+                }
             }
+        } else {
+            System.err.println("Erro: O servidor não respondeu à requisição.");
         }
     }
 
