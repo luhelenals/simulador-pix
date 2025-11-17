@@ -55,22 +55,19 @@ public class TransacaoController {
             List<Transacao> transacoesEncontradas = transacaoRepository.findByCpf(cpf);
             ArrayNode transacoesArrayNode = objectMapper.createArrayNode();
 
-            // --- LÓGICA DE FILTRO CORRIGIDA (MOVEMOS PARA FORA DO LOOP) ---
             LocalDateTime dataInicioFiltro = null;
             LocalDateTime dataFimFiltro = null;
             boolean aplicarFiltro = false;
 
-            // 1. Verificamos se as datas foram enviadas
             if (dados.has("data_inicial") && dados.has("data_final") &&
                     !dados.get("data_inicial").asText().isEmpty() &&
                     !dados.get("data_final").asText().isEmpty()) {
 
                 try {
-                    // 2. Pegamos as strings (ex: "2025-11-01T00:00:00Z")
                     String dataInicio = dados.get("data_inicial").asText();
                     String dataFim = dados.get("data_final").asText();
 
-                    // 3. (CORREÇÃO DO FUSO) Convertemos o Instant para LocalDateTime EM UTC
+                    // CORREÇÃO DO FUSO
                     dataInicioFiltro = LocalDateTime.ofInstant(Instant.parse(dataInicio), ZoneId.of("UTC"));
                     dataFimFiltro = LocalDateTime.ofInstant(Instant.parse(dataFim), ZoneId.of("UTC"));
 
@@ -79,36 +76,30 @@ public class TransacaoController {
 
                 } catch (Exception e) {
                     System.err.println("Erro ao parsear datas de filtro (formato ISO 8601 com 'Z' esperado): " + e.getMessage());
-                    // Não aplicamos o filtro se as datas forem inválidas
                 }
             }
-            // --- FIM DA LÓGICA DE FILTRO ---
-
 
             for (Transacao transacao : transacoesEncontradas) {
                 LocalDateTime dataOriginal = transacao.getDataTransacao();
 
                 if (dataOriginal == null) {
-                    continue; // Pula transações sem data
+                    continue;
                 }
 
                 boolean estaNoPeriodo = false;
 
-                // 4. Se o filtro estiver ativo, verificamos
                 if (aplicarFiltro) {
-                    // 5. (CORREÇÃO DA LÓGICA) Usamos "Não é antes" (>=) e "Não é depois" (<=)
                     if (!dataOriginal.isBefore(dataInicioFiltro) && !dataOriginal.isAfter(dataFimFiltro)) {
                         estaNoPeriodo = true;
                     }
                 }
 
-                // 6. Só adiciona no JSON se (NÃO for pra filtrar) OU (for pra filtrar E ESTIVER no período)
                 if (!aplicarFiltro || estaNoPeriodo) {
 
                     ObjectNode transacaoNode = objectMapper.createObjectNode();
 
                     // Formatar data da transação
-                    String dataFormatadaUTC = dataOriginal.toInstant(ZoneOffset.UTC).toString();
+                    String dataFormatadaUTC = dataOriginal.toInstant(ZoneOffset.UTC).toString().substring(0, 19) + "Z";
                     transacaoNode.put("data_transacao", dataFormatadaUTC);
                     transacaoNode.put("criado_em", dataFormatadaUTC);
                     transacaoNode.put("atualizado_em", dataFormatadaUTC);
