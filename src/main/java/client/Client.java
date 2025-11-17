@@ -5,9 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+
+import static common.util.RespostaManager.criarResposta;
 
 public class Client {
 
@@ -252,10 +256,19 @@ public class Client {
 
     private void verExtrato() {
         System.out.print("Data inicial (yyyy-mm-dd): ");
-        String dataInicial = scanner.nextLine().strip() + "T00:00:00Z";
+        String dataInicialInput = scanner.nextLine().strip();
+        String dataInicial = dataInicialInput + "T00:00:00Z";
+
         System.out.print("Data final (yyyy-mm-dd, deixar em branco para hoje): ");
-        String dataFinal = scanner.nextLine().strip();
-        dataFinal = (dataFinal.isBlank() ? LocalDate.now().toString() : dataFinal) + "T00:00:00Z";
+        String dataFinalInput = scanner.nextLine().strip();
+
+        String dataFinal;
+
+        if (dataFinalInput.isBlank()) {
+            dataFinal = Instant.now().truncatedTo(ChronoUnit.SECONDS).toString();
+        } else {
+            dataFinal = dataFinalInput + "T23:59:59Z";
+        }
 
         ObjectNode request = objectMapper.createObjectNode();
         request.put("operacao", "transacao_ler");
@@ -310,8 +323,9 @@ public class Client {
                 else {
                     System.out.println("Erro: " + response.get("info").asText());
                 }
-            } catch (JsonProcessingException e) {
-                System.err.println("Erro ao processar resposta do servidor.");
+            } catch (Exception e) {
+                System.err.println("Erro: " + e.getMessage());
+                criarResposta("erro_servidor", false, "Erro na operação transacao_ler.");
             }
         }
     }

@@ -14,7 +14,9 @@ import server.repository.TransacaoRepository;
 import server.repository.UsuarioRepository;
 import common.util.SessaoManager;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
@@ -37,60 +39,119 @@ public class TransacaoController {
      * Obtem transações de um usuário
      */
     public static String getTransacoes(JsonNode dados) {
-        String token = dados.get("token").asText();
-        String cpf = SessaoManager.getCpfPeloToken(token);
+        try {
+            String token = dados.get("token").asText();
+            String cpf = SessaoManager.getCpfPeloToken(token);
 
-        if (cpf == null) {
-            return criarResposta(dados.get("operacao").asText(), false, "Token inválido ou sessão expirada.");
-        }
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByCpf(cpf);
-        if (usuarioOpt.isEmpty()) {
-            return criarResposta(dados.get("operacao").asText(), false, "Usuário não encontrado.");
-        }
-
-        List<Transacao> transacoesEncontradas = transacaoRepository.findByCpf(cpf);
-        ArrayNode transacoesArrayNode = objectMapper.createArrayNode();
-
-        for (Transacao transacao : transacoesEncontradas) {
-            ObjectNode transacaoNode = objectMapper.createObjectNode();
-
-            // Formatar data da transação
-            LocalDateTime dataOriginal = transacao.getDataTransacao();
-            if (dataOriginal != null) {
-                String dataFormatadaUTC = dataOriginal.toInstant(ZoneOffset.UTC).toString();
-                transacaoNode.put("data_transacao", dataFormatadaUTC);
-
-                transacaoNode.put("criado_em", dataFormatadaUTC);
-                transacaoNode.put("atualizado_em", dataFormatadaUTC);
+            if (cpf == null) {
+                return criarResposta(dados.get("operacao").asText(), false, "Token inválido ou sessão expirada.");
             }
 
-            ObjectNode usuarioEnviadorNode = objectMapper.createObjectNode();
-            ObjectNode usuarioRecebedorNode = objectMapper.createObjectNode();
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByCpf(cpf);
+            if (usuarioOpt.isEmpty()) {
+                return criarResposta(dados.get("operacao").asText(), false, "Usuário não encontrado.");
+            }
 
-            usuarioEnviadorNode.put("cpf", transacao.getRemetente().getCpf());
-            usuarioEnviadorNode.put("nome", transacao.getRemetente().getNome());
+            List<Transacao> transacoesEncontradas = transacaoRepository.findByCpf(cpf);
+            ArrayNode transacoesArrayNode = objectMapper.createArrayNode();
 
-            usuarioRecebedorNode.put("cpf", transacao.getDestinatario().getCpf());
-            usuarioRecebedorNode.put("nome", transacao.getDestinatario().getNome());
+            // --- LÓGICA DE FILTRO CORRIGIDA (MOVEMOS PARA FORA DO LOOP) ---
+            LocalDateTime dataInicioFiltro = null;
+            LocalDateTime dataFimFiltro = null;
+            boolean aplicarFiltro = false;
 
-            transacaoNode.put("valor_enviado", transacao.getValor());
-            transacaoNode.put("id", transacao.getId());
-            transacaoNode.set("usuario_enviador", usuarioEnviadorNode);
-            transacaoNode.set("usuario_recebedor", usuarioRecebedorNode);
+            // 1. Verificamos se as datas foram enviadas
+            if (dados.has("data_inicial") && dados.has("data_final") &&
+                    !dados.get("data_inicial").asText().isEmpty() &&
+                    !dados.get("data_final").asText().isEmpty()) {
 
-            transacoesArrayNode.add(transacaoNode);
+                try {
+                    // 2. Pegamos as strings (ex: "2025-11-01T00:00:00Z")
+                    String dataInicio = dados.get("data_inicial").asText();
+                    String dataFim = dados.get("data_final").asText();
+
+                    // 3. (CORREÇÃO DO FUSO) Convertemos o Instant para LocalDateTime EM UTC
+                    dataInicioFiltro = LocalDateTime.ofInstant(Instant.parse(dataInicio), ZoneId.of("UTC"));
+                    dataFimFiltro = LocalDateTime.ofInstant(Instant.parse(dataFim), ZoneId.of("UTC"));
+
+                    aplicarFiltro = true;
+                    System.out.println("[CONTROLLER] Filtro de data UTC ativado de " + dataInicioFiltro + " até " + dataFimFiltro);
+
+                } catch (Exception e) {
+                    System.err.println("Erro ao parsear datas de filtro (formato ISO 8601 com 'Z' esperado): " + e.getMessage());
+                    // Não aplicamos o filtro se as datas forem inválidas
+                }
+            }
+            // --- FIM DA LÓGICA DE FILTRO ---
+
+
+            for (Transacao transacao : transacoesEncontradas) {
+                LocalDateTime dataOriginal = transacao.getDataTransacao();
+
+                if (dataOriginal == null) {
+                    continue; // Pula transações sem data
+                }
+
+                boolean estaNoPeriodo = false;
+
+                // 4. Se o filtro estiver ativo, verificamos
+                if (aplicarFiltro) {
+                    // 5. (CORREÇÃO DA LÓGICA) Usamos "Não é antes" (>=) e "Não é depois" (<=)
+                    if (!dataOriginal.isBefore(dataInicioFiltro) && !dataOriginal.isAfter(dataFimFiltro)) {
+                        estaNoPeriodo = true;
+                    }
+                }
+
+                // 6. Só adiciona no JSON se (NÃO for pra filtrar) OU (for pra filtrar E ESTIVER no período)
+                if (!aplicarFiltro || estaNoPeriodo) {
+
+                    ObjectNode transacaoNode = objectMapper.createObjectNode();
+
+                    // Formatar data da transação
+                    String dataFormatadaUTC = dataOriginal.toInstant(ZoneOffset.UTC).toString();
+                    transacaoNode.put("data_transacao", dataFormatadaUTC);
+                    transacaoNode.put("criado_em", dataFormatadaUTC);
+                    transacaoNode.put("atualizado_em", dataFormatadaUTC);
+
+                    // Criar nós de usuário
+                    ObjectNode usuarioEnviadorNode = objectMapper.createObjectNode();
+                    ObjectNode usuarioRecebedorNode = objectMapper.createObjectNode();
+
+                    usuarioEnviadorNode.put("cpf", transacao.getRemetente().getCpf());
+                    usuarioEnviadorNode.put("nome", transacao.getRemetente().getNome());
+
+                    usuarioRecebedorNode.put("cpf", transacao.getDestinatario().getCpf());
+                    usuarioRecebedorNode.put("nome", transacao.getDestinatario().getNome());
+
+                    transacaoNode.put("valor_enviado", transacao.getValor());
+                    transacaoNode.put("id", transacao.getId());
+                    transacaoNode.set("usuario_enviador", usuarioEnviadorNode);
+                    transacaoNode.set("usuario_recebedor", usuarioRecebedorNode);
+
+                    transacoesArrayNode.add(transacaoNode);
+                }
+            }
+
+            System.out.println("[CONTROLLER] Transações encontradas: " + transacoesArrayNode.toString());
+
+            ObjectNode resposta = objectMapper.createObjectNode();
+            resposta.put("operacao", dados.get("operacao").asText());
+            resposta.put("status", true);
+            resposta.put("info", "Transações do usuário recuperados com sucesso.");
+            resposta.set("transacoes", transacoesArrayNode);
+
+            return resposta.toString();
+
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace(); // É bom ter o stack trace completo
+            ObjectNode resposta = objectMapper.createObjectNode();
+            resposta.put("operacao", dados.get("operacao").asText());
+            resposta.put("status", false);
+            resposta.put("info", "Erro ao recuperar transações do usuário.");
+
+            return resposta.toString();
         }
-
-        System.out.println("[CONTROLLER] Transações encontradas: " + transacoesArrayNode.toString());
-
-        ObjectNode resposta = objectMapper.createObjectNode();
-        resposta.put("operacao", dados.get("operacao").asText());
-        resposta.put("status", true);
-        resposta.put("info", "Transações do usuário recuperados com sucesso.");
-        resposta.set("transacoes", transacoesArrayNode);
-
-        return resposta.toString();
     }
 
     /**
