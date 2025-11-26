@@ -319,15 +319,36 @@ public class Client {
 
                             String criado = transacao.get("criado_em").asText().substring(0, 10);
 
-                            System.out.println("=====================");
-                            System.out.println(cpf_recebedor.equals(cpfUsuario) ? "RECEBIDO" : "ENVIADO");
-                            System.out.println("ID: " + id);
-                            System.out.println("Data: " + criado);
-                            System.out.printf("Valor: R$ %.2f\n", valor);
-                            System.out.println(cpf_recebedor.equals(cpfUsuario) ? "Origem: " : "Destino: ");
-                            System.out.println("  Nome: " + (cpf_recebedor.equals(cpfUsuario) ? nome_enviador : nome_recebedor));
-                            System.out.println("  CPF: " + (cpf_recebedor.equals(cpfUsuario) ? cpf_enviador : cpf_recebedor));
-                            System.out.println("=====================");
+                            enum TipoTransacao {
+                                RECEBIMENTO,
+                                ENVIO,
+                                DEPOSITO
+                            };
+
+                            TipoTransacao tipo = null;
+                            if (cpf_recebedor.equals(cpf_enviador)) tipo = TipoTransacao.DEPOSITO;
+                            else if (cpf_recebedor.equals(cpfUsuario)) tipo = TipoTransacao.RECEBIMENTO;
+                            else tipo = TipoTransacao.ENVIO;
+
+                            String mensagem =
+                                    "\n==========================================\n" +
+                                    tipo.name() +
+                                    "\nID: " + id +
+                                    "\nData: " + criado +
+                                    "\nValor: R$" +  valor;
+
+                            if (tipo.equals(TipoTransacao.DEPOSITO)) {
+                                mensagem += "\n==========================================\n";
+                            }
+                            else {
+                                mensagem +=
+                                        (tipo.equals(TipoTransacao.RECEBIMENTO) ? "\nOrigem: " : "\nDestino: ") +
+                                        "\n  Nome: " + (tipo.equals(TipoTransacao.RECEBIMENTO) ? nome_enviador : nome_recebedor) +
+                                        "\n  CPF: " + (tipo.equals(TipoTransacao.RECEBIMENTO) ? cpf_enviador : cpf_recebedor) +
+                                        "\n==========================================\n";
+                            }
+
+                            System.out.print(mensagem);
                         }
                     }
                 }

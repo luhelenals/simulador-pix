@@ -108,30 +108,6 @@ public class UsuarioController {
     }
 
     /**
-     * Processa a operação de depósito na conta do usuário.
-     */
-    public static String depositar(JsonNode dados) {
-        String token = dados.get("token").asText();
-        double valor = dados.get("valor_enviado").asDouble();
-        String cpf = SessaoManager.getCpfPeloToken(token);
-
-        if (cpf == null) {
-            return criarResposta(dados.get("operacao").asText(), false, "Token inválido ou sessão expirada.");
-        }
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByCpf(cpf);
-        if (usuarioOpt.isEmpty()) {
-            return criarResposta(dados.get("operacao").asText(), false, "Usuário não encontrado.");
-        }
-
-        Usuario usuario = usuarioOpt.get();
-        usuario.depositar(valor);
-        usuarioRepository.update(usuario);
-
-        return criarResposta(dados.get("operacao").asText(), true, "Depósito realizado com sucesso.");
-    }
-
-    /**
      * Processa a operação de atualizar um usuário.
      * Espera um JSON com "token" no nível principal e um objeto "usuario" aninhado com os campos a serem alterados.
      */

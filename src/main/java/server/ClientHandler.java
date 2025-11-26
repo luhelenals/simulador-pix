@@ -98,7 +98,7 @@ public class ClientHandler implements Runnable {
                     response = TransacaoController.getTransacoes(json);
                     break;
                 case DEPOSITAR:
-                    response = UsuarioController.depositar(json);
+                    response = TransacaoController.depositar(json);
                     break;
                 case ERRO_SERVIDOR:
                     response = criarResposta(json.get("operacao").asText(), true, "Mensagem de erro recebida.");
