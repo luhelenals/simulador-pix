@@ -113,7 +113,19 @@ public class Client {
         request.put("cpf", cpf);
         request.put("senha", senha);
 
-        processarResposta(request.toString());
+        try {
+            processarResposta(request.toString());
+        }
+        catch (NullPointerException e) {
+            System.err.println("Erro: " + e.getMessage());
+
+            ObjectNode resposta = objectMapper.createObjectNode();
+            resposta.put("operacao", "erro_servidor");
+            resposta.put("operacao_enviada", "usuario_login");
+            resposta.put("info", "Servidor enviou parâmetro nulo.");
+
+            processarResposta(resposta.toString());
+        }
     }
 
     private void login() {
@@ -146,7 +158,18 @@ public class Client {
                 ObjectNode resposta = objectMapper.createObjectNode();
                 resposta.put("operacao", "erro_servidor");
                 resposta.put("operacao_enviada", "usuario_login");
-                resposta.put("info", e.getMessage());
+                resposta.put("info", "Erro ao processar mensagem do servidor.");
+
+                processarResposta(resposta.toString());
+            } catch (NullPointerException e) {
+                System.err.println("Erro: " + e.getMessage());
+
+                ObjectNode resposta = objectMapper.createObjectNode();
+                resposta.put("operacao", "erro_servidor");
+                resposta.put("operacao_enviada", "usuario_login");
+                resposta.put("info", "Servidor enviou parâmetro nulo.");
+
+                processarResposta(resposta.toString());
             }
         }
     }

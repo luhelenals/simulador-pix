@@ -32,4 +32,12 @@ public class RespostaManager {
 
         return resposta.toString();
     }
+
+    public static String criarRespostaErro() {
+        ObjectNode resposta = mapper.createObjectNode();
+        resposta.put("operacao", "dcsdcs");
+        resposta.put("status", true);
+
+        return resposta.toString();
+    }
 }
