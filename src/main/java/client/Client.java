@@ -206,6 +206,15 @@ public class Client {
                 resposta.put("operacao", "erro_servidor");
                 resposta.put("operacao_enviada", "usuario_login");
                 resposta.put("info", e.getMessage());
+            } catch (NullPointerException e) {
+                System.err.println("Erro: " + e.getMessage());
+
+                ObjectNode resposta = objectMapper.createObjectNode();
+                resposta.put("operacao", "erro_servidor");
+                resposta.put("operacao_enviada", "usuario_login");
+                resposta.put("info", "Servidor enviou parâmetro nulo.");
+
+                processarResposta(resposta.toString());
             }
         }
     }
@@ -245,7 +254,18 @@ public class Client {
 
         request.put("usuario", node);
 
-        processarResposta(request.toString());
+        try {
+            processarResposta(request.toString());
+        } catch (NullPointerException e) {
+            System.err.println("Erro: " + e.getMessage());
+
+            ObjectNode resposta = objectMapper.createObjectNode();
+            resposta.put("operacao", "erro_servidor");
+            resposta.put("operacao_enviada", "usuario_login");
+            resposta.put("info", "Servidor enviou parâmetro nulo.");
+
+            processarResposta(resposta.toString());
+        }
     }
 
     private void depositar() {
@@ -265,6 +285,19 @@ public class Client {
             System.err.println("Erro: digite um valor numérico válido (casas decimais com vírgula).");
             scanner.nextLine();
 
+        } catch (NullPointerException e) {
+            System.err.println("Erro: " + e.getMessage());
+
+            ObjectNode resposta = objectMapper.createObjectNode();
+            resposta.put("operacao", "erro_servidor");
+            resposta.put("operacao_enviada", "usuario_login");
+            resposta.put("info", "Servidor enviou parâmetro nulo.");
+
+            processarResposta(resposta.toString());
+
+            if (scanner.hasNextLine()) {
+                scanner.nextLine();
+            }
         } catch (Exception e) {
             System.err.println("Erro inesperado ao ler a entrada: " + e.getMessage());
             if (scanner.hasNextLine()) {
@@ -378,8 +411,24 @@ public class Client {
                 else {
                     System.out.println("Erro: " + response.get("info").asText());
                 }
-            } catch (Exception e) {
+            }  catch (JsonProcessingException e) {
                 System.err.println("Erro: " + e.getMessage());
+
+                ObjectNode resposta = objectMapper.createObjectNode();
+                resposta.put("operacao", "erro_servidor");
+                resposta.put("operacao_enviada", "usuario_login");
+                resposta.put("info", "Erro ao processar mensagem do servidor.");
+
+                processarResposta(resposta.toString());
+            } catch (NullPointerException e) {
+                System.err.println("Erro: " + e.getMessage());
+
+                ObjectNode resposta = objectMapper.createObjectNode();
+                resposta.put("operacao", "erro_servidor");
+                resposta.put("operacao_enviada", "usuario_login");
+                resposta.put("info", "Servidor enviou parâmetro nulo.");
+
+                processarResposta(resposta.toString());
             }
         }
         else {
