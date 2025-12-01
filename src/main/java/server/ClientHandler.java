@@ -33,32 +33,42 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         // Usamos try-with-resources para garantir que o leitor, escritor e o socket sejam fechados
+        String clientIp = clientSocket.getInetAddress().getHostAddress();
         try (
                 // Prepara para ler dados do cliente (requisições)
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 // Prepara para enviar dados para o cliente (respostas)
                 PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)
         ) {
+            // Register client in GUI
+            Server.registerClient(clientIp);
+
             String requestJson;
             // Loop para ler continuamente as mensagens do cliente
             while ((requestJson = reader.readLine()) != null) {
                 System.out.println("Recebido do cliente: " + requestJson);
+                // Log received message to GUI
+                Server.logMessage(clientIp, "RECEIVED", requestJson);
 
                 try {
                     String response = handleRequest(requestJson);
                     System.out.println("Enviando para o cliente: " + response + "\n");
+                    // Log sent response to GUI
+                    Server.logMessage(clientIp, "SENT", response);
                     writer.println(response);
                 } catch (Exception e) {
                     System.out.println(e);
                     String response = criarResposta("usuario_login", false, e.getMessage());
                     System.out.println("Enviando para o cliente: " + response + "\n");
+                    Server.logMessage(clientIp, "SENT", response);
                     writer.println(response);
                 }
             }
         } catch (IOException e) {
             System.err.println("Erro de comunicação com o cliente: " + e.getMessage());
         } finally {
-            System.out.println("Cliente desconectado: " + clientSocket.getInetAddress().getHostAddress());
+            System.out.println("Cliente desconectado: " + clientIp);
+            Server.unregisterClient(clientIp);
             try {
                 clientSocket.close(); // Garante que o socket seja fechado
             } catch (IOException e) {
