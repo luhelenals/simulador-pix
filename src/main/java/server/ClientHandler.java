@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import common.validator.RulesEnum;
 
 import static common.util.RespostaManager.criarResposta;
-import static common.util.RespostaManager.criarRespostaErro;
 import static common.validator.Validator.validateClient;
 import server.controllers.UsuarioController;
 import server.controllers.TransacaoController;
@@ -83,42 +82,36 @@ public class ClientHandler implements Runnable {
             RulesEnum operacao = RulesEnum.getEnum(json.get("operacao").asText());
             String response;
 
-            // Adicionar testes de mensagens erradas enviadas para cliente
-            boolean testesErros = false;
-            System.out.println("Ativar modo testes para enviar erros? (S/N) ");
-            Scanner scanner = new Scanner(System.in);
-            if (scanner.nextLine().toUpperCase(Locale.ROOT).equals("S")) testesErros = true;
-
             switch(operacao) {
                 case CONECTAR:
                     response = criarResposta(json.get("operacao").asText(), true, "Conectado com sucesso.");
                     break;
                 case USUARIO_LOGIN:
-                    response = testesErros ? criarRespostaErro() : UsuarioController.login(json);
+                    response = UsuarioController.login(json);
                     break;
                 case USUARIO_LOGOUT:
-                    response = testesErros ? criarRespostaErro() : UsuarioController.logout(json);
+                    response = UsuarioController.logout(json);
                     break;
                 case USUARIO_CRIAR:
-                    response = testesErros ? criarRespostaErro() : UsuarioController.criarUsuario(json);
+                    response = UsuarioController.criarUsuario(json);
                     break;
                 case USUARIO_LER:
-                    response = testesErros ? criarRespostaErro() : UsuarioController.lerUsuario(json);
+                    response = UsuarioController.lerUsuario(json);
                     break;
                 case USUARIO_ATUALIZAR:
-                    response = testesErros ? criarRespostaErro() : UsuarioController.updateUsuario(json);
+                    response = UsuarioController.updateUsuario(json);
                     break;
                 case USUARIO_DELETAR:
-                    response = testesErros ? criarRespostaErro() : UsuarioController.deleteUsuario(json);
+                    response = UsuarioController.deleteUsuario(json);
                     break;
                 case TRANSACAO_CRIAR:
-                    response = testesErros ? criarRespostaErro() : TransacaoController.criarTransacao(json);
+                    response = TransacaoController.criarTransacao(json);
                     break;
                 case TRANSACAO_LER:
-                    response = testesErros ? criarRespostaErro() : TransacaoController.getTransacoes(json);
+                    response = TransacaoController.getTransacoes(json);
                     break;
                 case DEPOSITAR:
-                    response = testesErros ? criarRespostaErro() : TransacaoController.depositar(json);
+                    response = TransacaoController.depositar(json);
                     break;
                 case ERRO_SERVIDOR:
                     response = criarResposta(json.get("operacao").asText(), true, "Mensagem de erro recebida.");
