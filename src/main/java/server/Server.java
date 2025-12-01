@@ -32,20 +32,15 @@ public class Server {
 
     private static final int PORTA = 21212;
 
-    // GUI instance (created on EDT)
     private static ServerGui gui = new ServerGui();
-
-    // Per-IP message storage (thread-safe)
     private static final Map<String, List<String>> messages = new ConcurrentHashMap<>();
-
-    // Date formatter for timestamps
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static void main(String[] args) {
         // Inicializa DB
         Database.initialize();
 
-        // Start GUI on EDT
+        // Start GUI
         SwingUtilities.invokeLater(() -> gui.init());
 
         // Start server accept loop in background thread
@@ -79,7 +74,7 @@ public class Server {
         serverThread.start();
     }
 
-    // Methods used by ClientHandler to report clients and messages
+    // Métodos usados por ClientHandler
     public static void registerClient(String ip) {
         messages.putIfAbsent(ip, Collections.synchronizedList(new ArrayList<>()));
         gui.addClient(ip);
@@ -95,7 +90,7 @@ public class Server {
         gui.appendMessage(ip, entry);
     }
 
-    // Simple inner class implementing the GUI
+    // Classe implementando a GUI
     private static class ServerGui {
         private JFrame frame;
         private DefaultListModel<String> clientsModel;
@@ -139,7 +134,7 @@ public class Server {
 
             frame.getContentPane().add(tabs, BorderLayout.CENTER);
 
-            // Dark theme background for frame
+            // Dark theme
             frame.getContentPane().setBackground(new Color(24,24,24));
             tabs.setBackground(new Color(34,34,34));
 

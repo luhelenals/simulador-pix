@@ -44,18 +44,16 @@ public class Client {
     }
 
     private void buildAndShowGui() {
-        // apply a dark UI theme for dialogs and common components
+        // dark UI theme
         setDarkUI();
 
         frame = new JFrame("Cliente PIX - GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // smaller window to fit only buttons comfortably
         frame.setSize(640, 360);
         frame.setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
         cards = new JPanel(cardLayout);
-        // dark background for cards
         cards.setBackground(new Color(34,34,34));
 
         cards.add(buildConnectionPanel(), "connection");
@@ -80,7 +78,6 @@ public class Client {
         tb.setTitleColor(new Color(200,200,200));
         consoleScroll.setBorder(tb);
 
-        // Only show the raw JSON console in the bottom area now
         bottom.add(consoleScroll, BorderLayout.CENTER);
 
         split.setBottomComponent(bottom);
@@ -120,11 +117,6 @@ public class Client {
 
             appendConsole("[ACTION] connect -> {\"host\": \""+host+"\", \"port\": "+port+"}");
 
-            // recreate connection object? We keep existing Connection but attempt to connect using provided host/port
-            // For simplicity, create a new Connection locally and try to connect using a temporary socket call.
-            // However the class's connection fields are final, so we will attempt to connect using the existing Connection
-            // which was constructed at startup; advise user to restart if different host/port needed.
-
             new Thread(() -> {
                 boolean ok = connection.connect();
                 SwingUtilities.invokeLater(() -> {
@@ -149,7 +141,7 @@ public class Client {
     }
 
     private JPanel buildPublicPanel() {
-        // Use GridLayout so buttons are equally distributed
+        // GridLayout pra distribuir botões igualmente
         JPanel panel = new JPanel(new GridLayout(1, 3, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
         panel.setBackground(new Color(34,34,34));
@@ -176,7 +168,6 @@ public class Client {
     }
 
     private JPanel buildAuthPanel() {
-        // Grid layout to distribute buttons evenly (3x3)
         JPanel panel = new JPanel(new GridLayout(3, 3, 8, 8));
         panel.setBorder(BorderFactory.createEmptyBorder(8,8,8,8));
         panel.setBackground(new Color(34,34,34));
@@ -224,7 +215,6 @@ public class Client {
             panel.add(b);
         }
 
-        // fill remaining cells to keep grid shape
         int remaining = 9 - buttons.length;
         for (int i=0;i<remaining;i++) panel.add(new JLabel());
 
@@ -299,7 +289,7 @@ public class Client {
     }
 
     private void onVerExtrato(ActionEvent e) {
-        // Use date pickers (spinners) so user can pick dates; default to today
+        // Data default = hoje
         SpinnerDateModel modelInicial = new SpinnerDateModel(new Date(), null, null, Calendar.DAY_OF_MONTH);
         JSpinner dataInicialSpinner = new JSpinner(modelInicial);
         dataInicialSpinner.setEditor(new JSpinner.DateEditor(dataInicialSpinner, "yyyy-MM-dd"));
@@ -367,9 +357,9 @@ public class Client {
     }
 
     private void runRequestWithTokenHandling(String jsonRequest) {
-        // send and if response contains token, store it and switch to auth panel
+        // se a resposta tem token, armazenar e mudar para o painel de autenticação
         new Thread(() -> {
-            // validate request before sending
+            // validar requisição antes de enviar
             try {
                 Validator.validateClient(jsonRequest);
             } catch (Exception vex) {
@@ -386,11 +376,9 @@ public class Client {
                 try {
                     JsonNode node = Validator.validateServer(resp);
                     SwingUtilities.invokeLater(() -> {
-                        // If server returned user data, show only the user data popup
                         if (node.has("usuario")) {
                             showHtmlPopup("Dados do Usuário", htmlWrap(formatUsuarioHtml(node.get("usuario"))), new Dimension(360, 200));
                         } else {
-                            // simple confirmation: show a small OK dialog with only the info
                             JOptionPane.showMessageDialog(frame, node.path("info").asText(), "Mensagem", JOptionPane.INFORMATION_MESSAGE);
                         }
                     });
@@ -411,7 +399,7 @@ public class Client {
 
     private void runRawRequest(String requestJson, boolean showFormatted) {
         new Thread(() -> {
-            // validate request before sending
+            // validate request
             try {
                 Validator.validateClient(requestJson);
             } catch (Exception vex) {
@@ -429,16 +417,13 @@ public class Client {
                     JsonNode node = Validator.validateServer(resp);
 
                     SwingUtilities.invokeLater(() -> {
-                        // If caller requested formatted display and server returned user data, show only that data
                         if (showFormatted && node.has("usuario")) {
                             showHtmlPopup("Dados do Usuário", htmlWrap(formatUsuarioHtml(node.get("usuario"))), new Dimension(360, 200));
                         } else {
-                            // otherwise, treat as a simple confirmation and show an OK dialog with only the info
                             JOptionPane.showMessageDialog(frame, node.path("info").asText(), "Mensagem", JOptionPane.INFORMATION_MESSAGE);
                         }
                     });
 
-                    // token handling for login
                     if (node.path("status").asBoolean(false) && node.has("token")) {
                         this.token = node.get("token").asText();
                         SwingUtilities.invokeLater(() -> cardLayout.show(cards, "auth"));
@@ -451,7 +436,7 @@ public class Client {
     }
 
     private String runRawRequestBlocking(String requestJson) {
-        // validate request before sending
+        // validate request
         try {
             Validator.validateClient(requestJson);
         } catch (Exception vex) {
@@ -499,7 +484,7 @@ public class Client {
             JsonNode reqNode = objectMapper.readTree(requestJson);
             operacaoEnviada = reqNode.path("operacao").asText("desconhecida");
         } catch (Exception ex) {
-            // ignora: operacaoEnviada fica 'desconhecida'
+            // ignorar
         }
 
         String mensagem = e.getMessage() == null ? "Resposta inválida do servidor." : e.getMessage();
@@ -552,7 +537,6 @@ public class Client {
     }
 
     private String htmlWrap(String body) {
-        // dark background and light text by default; caller can override alignment/styles inside body
         return "<html><body style='font-family:Arial,monospace; font-size:12px; background:#2b2b2b; color:#e6e6e6; margin:12px;'>" + body + "</body></html>";
     }
 
