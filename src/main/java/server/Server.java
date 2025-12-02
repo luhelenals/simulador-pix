@@ -30,7 +30,7 @@ import server.repository.Database;
  */
 public class Server {
 
-    private static final int PORTA = 21212;
+    private static final int PORTA = 24444;
 
     private static ServerGui gui = new ServerGui();
     private static final Map<String, List<String>> messages = new ConcurrentHashMap<>();

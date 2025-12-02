@@ -20,7 +20,7 @@ import java.text.ParseException;
 
 public class Client {
 
-    private final Connection connection;
+    private Connection connection;
     private final ObjectMapper objectMapper;
     private String token; // Armazena o token de sessão do usuário logado
 
@@ -118,6 +118,14 @@ public class Client {
             appendConsole("[ACTION] connect -> {\"host\": \""+host+"\", \"port\": "+port+"}");
 
             new Thread(() -> {
+                // Se já existir uma conexão anterior, desconectar antes
+                if (this.connection != null) {
+                    this.connection.disconnect();
+                }
+
+                // Cria uma nova instância com o host e porta que o usuário digitou
+                this.connection = new Connection(host, port);
+
                 boolean ok = connection.connect();
                 SwingUtilities.invokeLater(() -> {
                     if (ok) {
